@@ -31,17 +31,17 @@ public class BaseDaoFactory {
      * @param <T>
      * @return
      */
-    public <T> BaseDao<T> getBaseDao(Class<T> entityClass) {
+    public synchronized <T extends BaseDao<M>, M> T getBaseDao(Class<T> daoClass, Class<M> entityClass) {
         BaseDao baseDao = null;
         try {
-            baseDao = BaseDao.class.newInstance();
+            baseDao = daoClass.newInstance();
             baseDao.init(sqLiteDatabase, entityClass);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
-        return baseDao;
+        return (T) baseDao;
     }
 
 }
