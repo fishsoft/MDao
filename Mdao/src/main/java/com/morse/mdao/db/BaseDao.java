@@ -31,13 +31,18 @@ public class BaseDao<T> implements IBaseDao<T> {
     //创建一个缓存空间
     private HashMap<String, Field> cacheMap;
 
+    /**
+     * 初始化数据表，自动建表
+     *
+     * @param sqLiteDatabase
+     * @param entityClass
+     * @return
+     */
     protected boolean init(SQLiteDatabase sqLiteDatabase, Class<T> entityClass) {
         this.sqLiteDatabase = sqLiteDatabase;
         this.entityClass = entityClass;
 
         if (!isInit) {
-            //自动建表
-
             //获取表名
             if (null == entityClass.getAnnotation(DbTable.class)) {
                 //通过反射获取类名
@@ -58,9 +63,9 @@ public class BaseDao<T> implements IBaseDao<T> {
             sqLiteDatabase.execSQL(createTabel);
             cacheMap = new HashMap<>();
             initCacheMap();
+            isInit = true;
         }
 
-        isInit = true;
         return isInit;
     }
 
@@ -81,22 +86,27 @@ public class BaseDao<T> implements IBaseDao<T> {
             Field columField = null;
             for (Field field : columFileds) {
                 String fieldName = null;
-                if (null != field.getAnnotation(DbField.class)) {
-                    fieldName = field.getAnnotation(DbField.class).toString();
-                } else {
+                if (null != field.getAnnotation(DbField.class)) {//有注解
+                    fieldName = field.getAnnotation(DbField.class).value();
+                } else {//没注解
                     fieldName = field.getName();
                 }
-                if (columName.equals(fieldName)) {
+                if (columName.equals(fieldName)) {//列名与字段名一样
                     columField = field;
                     break;
                 }
             }
-            if (null != columField) {
+            if (null != columField) {//将对于的字段和属性放进缓存空间中
                 cacheMap.put(columName, columField);
             }
         }
     }
 
+    /**
+     * 拼接创建表的sql语句
+     *
+     * @return
+     */
     private String getCreateTableSql() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("create table if not exists ");
@@ -233,16 +243,14 @@ public class BaseDao<T> implements IBaseDao<T> {
         ContentValues contentValues = getContentValues(value);
         Map whereCase = getValues(where);
         Condition condition = new Condition(whereCase);
-        result = sqLiteDatabase.update(tableName, contentValues, condition.whereCasue, condition.whereArgs);
-        return 0;
+        return sqLiteDatabase.update(tableName, contentValues, condition.whereCasue, condition.whereArgs);
     }
 
     @Override
     public int delete(T where) {
         Map map = getValues(where);
         Condition condition = new Condition(map);
-        int result = sqLiteDatabase.delete(tableName, condition.whereCasue, condition.whereArgs);
-        return result;
+        return sqLiteDatabase.delete(tableName, condition.whereCasue, condition.whereArgs);
     }
 
     @Override
@@ -261,8 +269,7 @@ public class BaseDao<T> implements IBaseDao<T> {
         }
         Condition condition = new Condition(map);
         Cursor cursor = sqLiteDatabase.query(tableName, null, condition.whereCasue, condition.whereArgs, null, null, orderBy, limitString);
-        List<T> result = getResult(cursor, where);
-        return result;
+        return getResult(cursor, where);
     }
 
     private List<T> getResult(Cursor cursor, T where) {
