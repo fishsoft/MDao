@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import com.morse.mdao.annotation.DbField;
-import com.morse.mdao.annotation.DbTabel;
+import com.morse.mdao.annotation.DbTable;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -31,20 +31,20 @@ public class BaseDao<T> implements IBaseDao<T> {
     //创建一个缓存空间
     private HashMap<String, Field> cacheMap;
 
-    protected boolean init(SQLiteDatabase sqLiteDatabase, Class entityClass) {
+    protected boolean init(SQLiteDatabase sqLiteDatabase, Class<T> entityClass) {
         this.sqLiteDatabase = sqLiteDatabase;
         this.entityClass = entityClass;
 
-        if (isInit) {
+        if (!isInit) {
             //自动建表
 
             //获取表名
-            if (null == entityClass.getAnnotation(DbTabel.class)) {
+            if (null == entityClass.getAnnotation(DbTable.class)) {
                 //通过反射获取类名
                 tableName = entityClass.getSimpleName();
             } else {
                 //获取注解上的名字
-                tableName = entityClass.getAnnotation(DbTabel.class).toString();
+                tableName = entityClass.getAnnotation(DbTable.class).value();
                 if (TextUtils.isEmpty(tableName)) {
                     tableName = entityClass.getSimpleName();
                 }
@@ -54,7 +54,7 @@ public class BaseDao<T> implements IBaseDao<T> {
             }
             //创建数据表
             //create table if not exisit tb_user(_id integer,name varchar(20),password varchar(20))
-            String createTabel = getCreateTabelSql();
+            String createTabel = getCreateTableSql();
             sqLiteDatabase.execSQL(createTabel);
             cacheMap = new HashMap<>();
             initCacheMap();
@@ -97,9 +97,9 @@ public class BaseDao<T> implements IBaseDao<T> {
         }
     }
 
-    private String getCreateTabelSql() {
+    private String getCreateTableSql() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("create tabel if not exists ");
+        buffer.append("create table if not exists ");
         buffer.append(tableName + "(");
         //使用反射获取成员变量
         Field[] fields = entityClass.getDeclaredFields();
@@ -262,7 +262,7 @@ public class BaseDao<T> implements IBaseDao<T> {
         Condition condition = new Condition(map);
         Cursor cursor = sqLiteDatabase.query(tableName, null, condition.whereCasue, condition.whereArgs, null, null, orderBy, limitString);
         List<T> result = getResult(cursor, where);
-        return null;
+        return result;
     }
 
     private List<T> getResult(Cursor cursor, T where) {
@@ -301,6 +301,7 @@ public class BaseDao<T> implements IBaseDao<T> {
                 e.printStackTrace();
             }
         }
+        cursor.close();
         return list;
     }
 

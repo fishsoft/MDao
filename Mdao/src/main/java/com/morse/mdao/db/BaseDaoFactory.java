@@ -20,7 +20,7 @@ public class BaseDaoFactory {
     private String sqliteDatabasePath;
 
     private BaseDaoFactory() {
-        sqliteDatabasePath = "data/data/android.database.sqlite.SQLiteDatabase/mdao.db";
+        sqliteDatabasePath = "data/data/com.morse.mdao/mdao.db";
         sqLiteDatabase = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath, null);
     }
 
@@ -31,10 +31,10 @@ public class BaseDaoFactory {
      * @param <T>
      * @return
      */
-    public synchronized <T extends BaseDao<M>, M> T getBaseDao(Class<T> daoClass, Class<M> entityClass) {
+    public synchronized <T extends BaseDao<M>, M> T getBaseDao(Class<M> entityClass) {
         BaseDao baseDao = null;
         try {
-            baseDao = daoClass.newInstance();
+            baseDao = BaseDao.class.newInstance();
             baseDao.init(sqLiteDatabase, entityClass);
         } catch (InstantiationException e) {
             e.printStackTrace();
