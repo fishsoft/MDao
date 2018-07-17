@@ -15,3 +15,39 @@ dependencies {
 	 implementation 'com.github.fishsoft:MDao:v1.0'
 }
 ```
+* 初始化：
+```
+BaseDao baseDao = BaseDaoFactory.getInstance().getBaseDao(User.class);
+```
+* 插入数据：
+```
+插入name为“morse”，password为的“123456”的对象：
+User user = new User();
+user.setName("morse");
+user.setPassword("123456");
+long id = baseDao.insert(user);
+```
+* 查询数据：
+```
+查找name为“morse”的user对象：
+User user = new User();
+user.setName("morse");
+List<User> users = baseDao.query(user);
+```
+* 更新数据：
+```
+找到name为“morese”，password为“12345”的user，更新password为“123456”：
+User user = new User();
+user.setName("morse");
+user.setPassword("12345");
+User user1 = new User();
+user1.setPassword("123456");
+baseDao.update(user, user1);
+```
+* 删除数据：
+```
+删除id为1的对象：
+User user = new User();
+user.setId(1);
+baseDao.delete(user);
+```
