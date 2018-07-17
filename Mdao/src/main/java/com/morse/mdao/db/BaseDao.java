@@ -17,18 +17,27 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * 数据库dao类
  * Created by morse on 2018/3/26.
  */
 public class BaseDao<T> implements IBaseDao<T> {
 
-    //持有数据库对象
+    /**
+     * 持有数据库对象
+     */
     private SQLiteDatabase sqLiteDatabase;
-    //表名
+    /**
+     * 表名
+     */
     private String tableName;
-    //持有操作数据库的java类型
+    /**
+     * 持有操作数据库的java类型
+     */
     private Class<T> entityClass;
     private boolean isInit = false;
-    //创建一个缓存空间
+    /**
+     * 创建一个缓存空间
+     */
     private HashMap<String, Field> cacheMap;
 
     /**
@@ -116,10 +125,11 @@ public class BaseDao<T> implements IBaseDao<T> {
         for (Field field : fields) {
             Class type = field.getType();//获取到数据类型
             if (null != field.getAnnotation(DbField.class)) {
+                boolean isAutoincrement = field.getAnnotation(DbField.class).autoincrement();
                 if (type == String.class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " TEXT,");
-                } else if (type == Integer.class) {
-                    buffer.append(field.getAnnotation(DbField.class).value() + " INTEGER,");
+                } else if (type == Integer.class) {//如果注解有自增长设置，则设置字段自增长,只有主键，并且整型数据才能自增长
+                    buffer.append(field.getAnnotation(DbField.class).value() + (isAutoincrement ? " INTEGER PRIMARY KEY AUTOINCREMENT," : " INTEGER,"));
                 } else if (type == Long.class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " BIGINT,");
                 } else if (type == Double.class) {
@@ -213,6 +223,9 @@ public class BaseDao<T> implements IBaseDao<T> {
         return map;
     }
 
+    /**
+     * 条件转化
+     */
     static class Condition {
         private String whereCasue;
         private String[] whereArgs;
@@ -268,6 +281,13 @@ public class BaseDao<T> implements IBaseDao<T> {
         return getResult(cursor, where);
     }
 
+    /**
+     * 根据游标去区数据的值
+     *
+     * @param cursor
+     * @param where
+     * @return
+     */
     private List<T> getResult(Cursor cursor, T where) {
         ArrayList list = new ArrayList<>();
         Object item = null;

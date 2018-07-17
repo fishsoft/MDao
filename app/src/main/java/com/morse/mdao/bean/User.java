@@ -8,7 +8,7 @@ import com.morse.mdao.annotation.DbTable;
  */
 @DbTable("tb_user")//如果不写tb_user，创建的表明为user
 public class User {
-    @DbField("_id")
+    @DbField(value = "_id", autoincrement = true)
     private Integer id;
     private String name;
     private String password;

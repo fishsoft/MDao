@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 表注解
  * Created by morse on 2018/3/26.
  */
 @Target(ElementType.TYPE)

@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     public void update(View view) {
         initDao();
         User user = new User();
-//        user.setId(1);
         user.setName("morse");
         user.setPassword("12345");
         User user1 = new User();

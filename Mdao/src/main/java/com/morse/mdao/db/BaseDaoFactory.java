@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
  * 建表工厂
  * Created by morse on 2018/3/26.
  */
-
 public class BaseDaoFactory {
 
     private static final BaseDaoFactory instance = new BaseDaoFactory();
