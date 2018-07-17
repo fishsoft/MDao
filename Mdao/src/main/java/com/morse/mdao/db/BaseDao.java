@@ -220,7 +220,6 @@ public class BaseDao<T> implements IBaseDao<T> {
         public Condition(Map<String, String> whereCasue) {
             List list = new ArrayList();
             StringBuffer buffer = new StringBuffer();
-            buffer.append("1=1");
             Set<String> keys = whereCasue.keySet();
             Iterator it = keys.iterator();
             while (it.hasNext()) {
@@ -231,14 +230,13 @@ public class BaseDao<T> implements IBaseDao<T> {
                     list.add(value);
                 }
             }
-            this.whereCasue = buffer.toString();
+            this.whereCasue = buffer.substring(5);
             this.whereArgs = (String[]) list.toArray(new String[list.size()]);
         }
     }
 
     @Override
     public long update(T entity, T where) {
-        int result = -1;
         Map value = getValues(entity);
         ContentValues contentValues = getContentValues(value);
         Map whereCase = getValues(where);
@@ -260,8 +258,6 @@ public class BaseDao<T> implements IBaseDao<T> {
 
     @Override
     public List<T> query(T where, String orderBy, Integer startIndex, Integer limit) {
-
-//        sqLiteDatabase.query(tableName,null,"is=?",new String[],null,null,orderBy)
         Map map = getValues(where);
         String limitString = null;
         if (startIndex != null && limit != null) {
@@ -288,7 +284,9 @@ public class BaseDao<T> implements IBaseDao<T> {
                     Field field = (Field) entry.getValue();
                     Class type = field.getType();
                     if (-1 != index) {
-                        if (String.class == type) {
+                        if (Integer.class == type) {
+                            field.set(item, cursor.getInt(index));
+                        } else if (String.class == type) {
                             field.set(item, cursor.getString(index));
                         } else if (Double.class == type) {
                             field.set(item, cursor.getDouble(index));
