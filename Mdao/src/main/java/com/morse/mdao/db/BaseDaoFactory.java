@@ -1,6 +1,11 @@
 package com.morse.mdao.db;
 
+import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * 建表工厂
@@ -8,7 +13,18 @@ import android.database.sqlite.SQLiteDatabase;
  */
 public class BaseDaoFactory {
 
-    private static final BaseDaoFactory instance = new BaseDaoFactory();
+    private static BaseDaoFactory instance;
+
+    public static BaseDaoFactory getInstance(Context context) {
+        if (null == instance) {
+            synchronized (BaseDaoFactory.class) {
+                if (null == instance) {
+                    instance = new BaseDaoFactory(context);
+                }
+            }
+        }
+        return instance;
+    }
 
     public static BaseDaoFactory getInstance() {
         return instance;
@@ -16,11 +32,34 @@ public class BaseDaoFactory {
 
     private SQLiteDatabase sqLiteDatabase;
 
-    private String sqliteDatabasePath;
-
-    private BaseDaoFactory() {
-        sqliteDatabasePath = "data/data/com.morse.mdao/mdao.db";
+    private BaseDaoFactory(Context context) {
+        String packageName = context.getPackageName();
+        String sqliteDatabasePath = "data/data/" + packageName + "/data.db";
         sqLiteDatabase = SQLiteDatabase.openOrCreateDatabase(sqliteDatabasePath, null);
+    }
+
+    /**
+     * 指定路径生成数据库
+     * <p>可以保存到任意位置</p>
+     *
+     * @param path 绝对路径
+     */
+    private BaseDaoFactory(String path) {
+        try {
+            if (TextUtils.isEmpty(path)) {
+                throw new NullPointerException("path is null");
+            }
+            File file = new File(path);
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            sqLiteDatabase = SQLiteDatabase.openOrCreateDatabase(file, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
