@@ -8,6 +8,9 @@ import android.text.TextUtils;
 import com.morse.mdao.annotation.DbField;
 import com.morse.mdao.annotation.DbTable;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,7 +74,7 @@ public class BaseDao<T> implements IBaseDao<T> {
             String createTabel = getCreateTableSql();
             sqLiteDatabase.execSQL(createTabel);
             cacheMap = new HashMap<>();
-            initCacheMap();
+            initCacheMap();//初始化数据库缓存
             isInit = true;
         }
 
@@ -125,17 +128,19 @@ public class BaseDao<T> implements IBaseDao<T> {
         for (Field field : fields) {
             Class type = field.getType();//获取到数据类型
             if (null != field.getAnnotation(DbField.class)) {
-                boolean isAutoincrement = field.getAnnotation(DbField.class).autoincrement();
+//                boolean isAutoincrement = field.getAnnotation(DbField.class).autoincrement();
                 if (type == String.class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " TEXT,");
                 } else if (type == Integer.class) {//如果注解有自增长设置，则设置字段自增长,只有主键，并且整型数据才能自增长
-                    buffer.append(field.getAnnotation(DbField.class).value() + (isAutoincrement ? " INTEGER PRIMARY KEY AUTOINCREMENT," : " INTEGER,"));
+                    buffer.append(field.getAnnotation(DbField.class).value() + (/*isAutoincrement ? " INTEGER PRIMARY KEY AUTOINCREMENT," : */" INTEGER,"));
                 } else if (type == Long.class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " BIGINT,");
                 } else if (type == Double.class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " DOUBLE,");
                 } else if (type == byte[].class) {
                     buffer.append(field.getAnnotation(DbField.class).value() + " BLOB,");
+                } else if (type == JSONObject.class) {
+                    buffer.append(field.getAnnotation(DbField.class).value() + " TEXT,");
                 } else {
                     continue;
                 }
@@ -150,6 +155,8 @@ public class BaseDao<T> implements IBaseDao<T> {
                     buffer.append(field.getName() + " DOUBLE,");
                 } else if (type == byte[].class) {
                     buffer.append(field.getName() + " BLOB,");
+                } else if (type == JSONObject.class) {
+                    buffer.append(field.getAnnotation(DbField.class).value() + " TEXT,");
                 } else {
                     continue;
                 }
@@ -167,6 +174,18 @@ public class BaseDao<T> implements IBaseDao<T> {
         Map<String, String> map = getValues(entity);
         ContentValues contentValues = getContentValues(map);
         return sqLiteDatabase.insert(tableName, null, contentValues);
+    }
+
+    @Override
+    public long batchInsert(List<T> entities) {
+        if (null == entities || entities.isEmpty()) {
+            return 0;
+        }
+        long id = 0;
+        for (int i = 0; i < entities.size(); i++) {
+            id = insert(entities.get(i));
+        }
+        return id;
     }
 
     /**
@@ -226,7 +245,7 @@ public class BaseDao<T> implements IBaseDao<T> {
     /**
      * 条件转化
      */
-    static class Condition {
+    private static class Condition {
         private String whereCasue;
         private String[] whereArgs;
 
@@ -243,7 +262,7 @@ public class BaseDao<T> implements IBaseDao<T> {
                     list.add(value);
                 }
             }
-            this.whereCasue = buffer.substring(5);
+            this.whereCasue = 0 == whereCasue.size() ? buffer.toString() : buffer.substring(5);
             this.whereArgs = (String[]) list.toArray(new String[list.size()]);
         }
     }
@@ -264,10 +283,17 @@ public class BaseDao<T> implements IBaseDao<T> {
         return sqLiteDatabase.delete(tableName, condition.whereCasue, condition.whereArgs);
     }
 
+    /**
+     * 查询全部
+     *
+     * @param where
+     * @return
+     */
     @Override
     public List<T> query(T where) {
         return query(where, null, null, null);
     }
+
 
     @Override
     public List<T> query(T where, String orderBy, Integer startIndex, Integer limit) {
@@ -314,6 +340,12 @@ public class BaseDao<T> implements IBaseDao<T> {
                             field.set(item, cursor.getLong(index));
                         } else if (byte[].class == type) {
                             field.set(item, cursor.getBlob(index));
+                        } else if (JSONObject.class == type) {
+                            try {
+                                field.set(item, new JSONObject(cursor.getString(index)));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         } else {
                             continue;
                         }
@@ -331,8 +363,13 @@ public class BaseDao<T> implements IBaseDao<T> {
     }
 
     @Override
-    public List<T> query(String sql) {
-//        List<T> list=sqLiteDatabase.execSQL(sql);
-        return null;
+    public List<T> query(String sql, T where) {
+        Cursor cursor = sqLiteDatabase.rawQuery(sql, null);
+        return getResult(cursor, where);
+    }
+
+    @Override
+    public void clear() {
+        sqLiteDatabase.execSQL("delete from " + tableName + ";");
     }
 }
