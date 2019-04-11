@@ -8,12 +8,11 @@ import android.view.View;
 import com.morse.mdao.bean.User;
 import com.morse.mdao.db.BaseDao;
 import com.morse.mdao.db.BaseDaoFactory;
+import com.morse.mdao.db.DBManager;
 
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
-    private BaseDao baseDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         User user = new User();
         user.setName("morse");
         user.setPassword("123456");
-        long id = baseDao.insert(user);
+        long id = DBManager.getManagerDao(User.class).insert(user);
         Log.d("morse", id + "");
     }
 
@@ -37,27 +36,21 @@ public class MainActivity extends AppCompatActivity {
         user.setPassword("12345");
         User user1 = new User();
         user1.setPassword("123456");
-        baseDao.update(user, user1);
+        DBManager.getManagerDao(User.class).update(user, user1);
     }
 
     public void query(View view) {
         initDao();
         User user = new User();
         user.setName("morse");
-        List<User> users = baseDao.query(user);
+        List<User> users = DBManager.getManagerDao(User.class).query(user);
         System.out.println("数据数目：" + users.size() + "\n数据：" + users.toString());
-    }
-
-    private void initDao() {
-        if (null == baseDao) {
-            baseDao = BaseDaoFactory.getInstance().getBaseDao(User.class);
-        }
     }
 
     public void delete(View view) {
         initDao();
         User user = new User();
         user.setId(1);
-        baseDao.delete(user);
+        DBManager.getManagerDao(User.class).delete(user);
     }
 }
