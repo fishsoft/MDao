@@ -12,27 +12,39 @@ allprojects {
 }
 
 dependencies {
-	 implementation 'com.github.fishsoft:MDao:v1.0'
+	 implementation 'com.github.fishteam1:MDao:1.0.0'
 }
 ```
-初始化：
+
+创建数据库和字段:
 ```
-BaseDao baseDao = BaseDaoFactory.getInstance().getBaseDao(User.class);
+@DbTabel("news")
+public class News {
+    @DbField("title")
+    private String title;
+    @DbField("content")
+    private String content;
+    @DbField("author")
+    private String author;
+    @DbField("date")
+    private String date;
+}
 ```
+
 插入数据：
 ```
 插入name为“morse”，password为的“123456”的对象：
 User user = new User();
 user.setName("morse");
 user.setPassword("123456");
-long id = baseDao.insert(user);
+long id = DBManager.getManagerDao(User.class).insert(user);
 ```
 查询数据：
 ```
 查找name为“morse”的user对象：
 User user = new User();
 user.setName("morse");
-List<User> users = baseDao.query(user);
+List<User> users = DBManager.getManagerDao(User.class).query(user);
 ```
 更新数据：
 ```
@@ -42,12 +54,12 @@ user.setName("morse");
 user.setPassword("12345");
 User user1 = new User();
 user1.setPassword("123456");
-baseDao.update(user, user1);
+DBManager.getManagerDao(User.class).update(user, user1);
 ```
 删除数据：
 ```
 删除id为1的对象：
 User user = new User();
 user.setId(1);
-baseDao.delete(user);
+DBManager.getManagerDao(User.class).delete(user);
 ```
