@@ -15,6 +15,14 @@ public interface IBaseDao<T> {
     long insert(T entity);
 
     /**
+     * 批量插入数据库
+     *
+     * @param entities
+     * @return
+     */
+    long batchInsert(List<T> entities);
+
+    /**
      * 更新数据
      *
      * @param entity
@@ -56,5 +64,10 @@ public interface IBaseDao<T> {
      * @param sql
      * @return
      */
-    List<T> query(String sql);
+    List<T> query(String sql, T where);
+
+    /**
+     * 清空表数据
+     */
+    void clear();
 }
